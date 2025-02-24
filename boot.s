@@ -12,5 +12,13 @@ end:
 
 kernel_entry:
     mov sp, #0x80000 // stack pointer = 0x80000
+    
+    /*memset(bss_start,0,bss_start-bss_end*/
+    ldr x0, =bss_start
+    ldr x1, =bss_end
+    sub x2, x1, x0
+    mov x1, #0
+    bl memset
+
     bl KMain // jump to the Kmain(which defined in c)
     b end
