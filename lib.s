@@ -5,6 +5,12 @@
 .global memcpy
 .global memmov
 .global memcmp
+.global get_el
+
+get_el:
+    mrs x0, currentel
+    lsr x0, x0, #2
+    ret
 
 delay:
     subs x0, x0, #1 // x0 = x0-1
