@@ -17,10 +17,10 @@ kernel_entry:
     cmp x0, #2
     bne end
 
-    # write 0 to sctrl_el1 reg
+    //write 0 to sctrl_el1 reg
     msr sctlr_el1, xzr
+    // el1 will run at aarch64
     mov x0, #(1 << 31)
-    //config the behaviour in el2
     msr hcr_el2, x0
 
     // el_mode = 0101
@@ -41,6 +41,10 @@ el1_entry:
     sub x2, x1, x0
     mov x1, #0
     bl memset
+
+    // setup el1 vector table address
+    ldr x0, =vector_table
+    msr vbar_el1, x0
 
     bl KMain // jump to the Kmain(which defined in c)
     b end
