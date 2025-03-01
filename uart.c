@@ -9,28 +9,26 @@ void uart_init(void){
     out_word(UART0_FBRD,3); // or 0?
 
     /*for config parameter*/
-    out_word(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
-    /*clear all uart0 interrupt mask*/
-    out_word(UART0_IMSC,0);
+    out_word(UART0_LCRH,  (1 << 5) | (1 << 6));
+    /*RX int on,*/
+    out_word(UART0_IMSC,(1<<4));
 
     /*enable interrupt on fifo on*/
     out_word(UART0_CR,(1<<0) | (1<<8) | (1<<9));
 
 }
 
-void write_char(unsigned char c) {
-    /*if transmit buff is full then while(1)*/
-    while(in_word(UART0_FR) & (1 << 5))
+void write_char(unsigned char c)
+{
+    /*if uart is busy*/
+    while (in_word(UART0_FR) & (1 << 3))
     {
     };
-    out_word(UART0_DR,c);
+    out_word(UART0_DR, c);
 }
 
-unsigned char read_char(){
-    /*if read buffer is full, while(1)*/
-    while (in_word(UART0_FR) & (1<<4))
-    {
-    }
+unsigned char read_char()
+{
     return in_word(UART0_DR);
 }
 
@@ -38,4 +36,20 @@ void write_str(const char * str) {
     for (int i=0; str[i] != '\0';i++){
         write_char(str[i]);
     }
+}
+
+void uart_handler(void)
+{
+    uint32_t status = in_word(UART0_MIS);
+    // rx int
+    if(status & (1<<4)) {
+        char ch = read_char();
+        if (ch =='\r'){
+            write_str("\r\n");
+        }
+        else{
+            write_char(ch);
+        }
+    }
+    out_word(UART0_ICR,(1 <<4 ));
 }
