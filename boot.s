@@ -3,7 +3,7 @@
 
 start:
     mrs x0, mpidr_el1 // read the cpu infor to reg_x0
-    and x0, x0,#3 // reg_x0 &= 0b11
+    and x0, x0, #3 // reg_x0 &= 0b11
     cmp x0, #0 // if reg_x0 == 0x0 --> cpu is needed
     beq kernel_entry
 
@@ -34,6 +34,9 @@ kernel_entry:
 
 el1_entry:
     mov sp, #0x80000 // stack pointer = 0x80000
+
+    bl setup_vm
+    bl enable_mmu
     
     /*memset(bss_start,0,bss_start-bss_end*/
     ldr x0, =bss_start
@@ -46,5 +49,10 @@ el1_entry:
     ldr x0, =vector_table
     msr vbar_el1, x0
 
-    bl KMain // jump to the Kmain(which defined in c)
+    // already were virt address
+    mov x0, #0xffff000000000000
+    add sp, sp, x0
+    ldr x0, =KMain
+// jump to the Kmain(which defined in c)
+    blr x0
     b end

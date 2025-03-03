@@ -8,7 +8,7 @@ void KMain(void)
     uart_init();
     printk("Hello world\r\n");
     printk("we are at EL:%u\r\n",get_el());
-    // init_timer();
+    init_timer();
     init_interrupt_controller();
     enable_irq();
     while (1)

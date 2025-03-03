@@ -1,7 +1,8 @@
 #ifndef _UART_H
 #define _UART_H
 
-#define IO_BASE_ADDR 0x3F200000
+#include "memory.h"
+#define IO_BASE_ADDR P2V(0x3F200000)
 
 
 
