@@ -49,7 +49,7 @@ el1_entry:
     ldr x0, =vector_table
     msr vbar_el1, x0
 
-    // already were virt address
+    // already were virt address sp = 0xffff000000080000
     mov x0, #0xffff000000000000
     add sp, sp, x0
     ldr x0, =KMain

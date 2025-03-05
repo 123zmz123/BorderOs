@@ -2,7 +2,7 @@ ENTRY(start)
 SECTIONS
 {
     . = 0xffff000000080000;
-    
+
     .text : {
         *(.text)
     }
@@ -21,4 +21,5 @@ SECTIONS
         *(.bss)
     bss_end = .;
     }
+    end = .;
 }
