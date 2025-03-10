@@ -2,9 +2,12 @@
 #include "debug.h"
 #include "print.h"
 #include "stddef.h"
+#include "lib.h"
+#include "stdbool.h"
 
 static struct Page free_memory;
 extern char end;
+void load_pgd(uint64_t map);
 
 static void free_region(uint64_t v, uint64_t e)
 {
@@ -54,9 +57,148 @@ void checkmm(void)
     printk("memory size is %u \r\n", size / 1024 / 1024);
 }
 
+static uint64_t* find_pgd_entry(uint64_t map, uint64_t v, int alloc, uint64_t attr) 
+{
+    uint64_t *ptr = (uint64_t*)map;
+    void *addr = NULL;
+    unsigned int index = (v >> 39) & 0x1ff;
+
+    if (ptr[index] & ENTRY_V) {
+        addr = (void*)P2V(PDE_ADDR(ptr[index]));
+    }
+    else if (alloc == 1) {
+        addr = kalloc();
+        if (addr != NULL) {
+            memset(addr, 0, PAGE_SIZE);
+            ptr[index] = (V2P(addr) | attr | TABLE_ENTRY);
+        }
+    }
+
+    return addr;
+}
+
+
+
+static uint64_t* find_pud_entry(uint64_t map, uint64_t v, int alloc, uint64_t attr)
+{
+    uint64_t *ptr = NULL;
+    void *addr = NULL;
+    // 30 = 21+9
+    unsigned int index = (v >> 30) & 0x1ff;
+    // ptr is g_table entry
+    ptr = find_pgd_entry(map, v, alloc, attr);
+    if (ptr == NULL) {
+        return NULL;
+    }
+    // direct to next level
+    if (ptr[index] & ENTRY_V) {
+        // clear other attribute get pure address
+        addr = (void*)P2V(PDE_ADDR(ptr[index]));
+    }
+    else if (alloc == 1) {
+        // allocate a page
+        addr = kalloc();
+        if (addr != NULL) {
+            memset(addr, 0, PAGE_SIZE);
+            ptr[index] = (V2P(addr) | attr | TABLE_ENTRY);
+        }
+    }
+    return addr;
+}
+// map virtual address to specific page
+bool map_page(uint64_t map, uint64_t v, uint64_t pa, uint64_t attr)
+{
+    uint64_t vstart = PA_DOWN(v);
+    uint64_t *ptr = NULL;
+
+    ASSERT(vstart + PAGE_SIZE < MEMORY_END);
+    ASSERT(pa % PAGE_SIZE == 0);
+    ASSERT(pa + PAGE_SIZE <= V2P(MEMORY_END));
+    // return u table head
+    ptr = find_pud_entry(map, vstart, 1, attr);
+    if (ptr == NULL) {
+        return false;
+    }
+    // u_table[index]=m_table
+    uint32_t index = (vstart >> 21) & 0x1ff;
+    ASSERT((ptr[index] & ENTRY_V) == 0);
+    //m_table[index]=phy_addr
+    ptr[index] = (pa | attr | BLOCK_ENTRY);
+    return true;
+}
+
+void free_page(uint64_t map, uint64_t vstart)
+{
+    unsigned int index;
+    uint64_t *ptr = NULL;
+    ASSERT(vstart % PAGE_SIZE == 0);
+
+    ptr = find_pud_entry(map, vstart, 0, 0);
+    if (ptr != NULL) {
+        index = (vstart >> 21) & 0x1ff;
+        if (ptr[index] & ENTRY_V) {
+            kfree(P2V(PTE_ADDR(ptr[index])));
+            ptr[index] = 0;
+        }
+    }
+}
+
+static void free_pmd(uint64_t map)
+{
+    uint64_t *pgd = (uint64_t*)map;
+    uint64_t *pud = NULL;
+
+    for (int i = 0; i < 512; i++) {
+        if (pgd[i] & ENTRY_V) {
+            pud = (uint64_t*)P2V(PDE_ADDR(pgd[i]));
+            for (int j = 0; j < 512; j++) {
+                if (pud[j] & ENTRY_V) {
+                    kfree(P2V(PDE_ADDR(pud[j])));
+                    pud[j] = 0;
+                }
+            }
+        }
+    }
+}
+
+static void free_pud(uint64_t map) 
+{
+    uint64_t *ptr = (uint64_t*)map;
+    for (int i = 0; i < 512; i++) {
+        if (ptr[i] & ENTRY_V) {
+            kfree(P2V(PDE_ADDR(ptr[i])));
+            ptr[i] = 0;
+        }
+    }
+}
+
+static void free_pgd(uint64_t map) 
+{
+    kfree(map);
+}
+void free_vm(uint64_t map)
+{
+    // free_page(map, 0x400000);
+    // free_pmd(map);
+    // free_pud(map);
+    // free_pgd(map);
+}
+
+bool setup_uvm(void)
+{
+    bool status = false;
+
+    return status;
+}
+
+void switch_vm(uint64_t map)
+{
+    load_pgd(V2P(map));
+}
+
 void init_memory(void)
 {
     //setup the page table from end of the kernl to memory boundry
     free_region((uint64_t)&end, MEMORY_END);
-    checkmm();
+    // checkmm();
 }

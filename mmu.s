@@ -9,6 +9,16 @@
 
 .global enable_mmu
 .global setup_vm
+.global load_pgd
+
+load_pgd:
+    msr ttbr0_el1, x0
+    tlbi vmalle1is
+    dsb ish
+    isb
+
+    ret
+
 
 enable_mmu:
     // ttbr1-->kernel ttbr0-->user
