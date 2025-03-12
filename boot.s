@@ -1,3 +1,5 @@
+.equ FS_BASE, 0xffff000030000000
+.equ FS_SIZE, 101*16*63*512
 .section .text
 .global start // used by the linker
 
@@ -37,7 +39,14 @@ el1_entry:
 
     bl setup_vm
     bl enable_mmu
-    
+
+    /*memcpy dst=FS_BASE, src=bss_start, size = FS_SIZE*/
+    /*when we do the link the os.img will be put at the end of kernel.img*/
+    ldr x0, =FS_BASE
+    ldr x1, =bss_start
+    ldr x2, =FS_SIZE
+    bl memcpy
+    /*after copy file system then we must clear bss section*/
     /*memset(bss_start,0,bss_start-bss_end*/
     ldr x0, =bss_start
     ldr x1, =bss_end

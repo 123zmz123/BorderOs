@@ -8,6 +8,9 @@ aarch64-linux-gnu-gcc -std=c99 -ffreestanding -mgeneral-regs-only  -c print.c
 aarch64-linux-gnu-gcc -std=c99 -ffreestanding -mgeneral-regs-only  -c debug.c
 aarch64-linux-gnu-gcc -std=c99 -ffreestanding -mgeneral-regs-only  -c handler.c
 aarch64-linux-gnu-gcc -std=c99 -ffreestanding -mgeneral-regs-only  -c memory.c
+aarch64-linux-gnu-gcc -std=c99 -ffreestanding -mgeneral-regs-only  -c file.c
 
-aarch64-linux-gnu-ld -nostdlib -T link.lds -o kernel boot.o main.o lib.o uart.o print.o debug.o handlera.o handler.o mmu.o memory.o
+
+aarch64-linux-gnu-ld -nostdlib -T link.lds -o kernel boot.o main.o lib.o uart.o print.o debug.o handlera.o handler.o mmu.o  memory.o file.o
 aarch64-linux-gnu-objcopy -O binary kernel kernel.img
+dd if=os.img >> kernel.img
