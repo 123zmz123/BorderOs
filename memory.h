@@ -48,4 +48,7 @@ void switch_vm(uint64_t map);
 bool setup_uvm(void);
 void free_page(uint64_t map, uint64_t vstart);
 void free_vm(uint64_t map);
+uint64_t read_pgd(void);
+
+
 #endif

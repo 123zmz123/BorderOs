@@ -10,6 +10,11 @@
 .global enable_mmu
 .global setup_vm
 .global load_pgd
+.global read_pgd
+// read global page map at el1
+read_pgd:
+    mrs x0, ttbr0_el1
+    ret
 
 load_pgd:
     msr ttbr0_el1, x0
