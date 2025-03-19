@@ -14,15 +14,10 @@ void KMain(void)
     printk("we are at EL:%u\r\n",get_el());
     init_memory();
     init_fs();
-    void *p = kalloc();
-    ASSERT(p!=NULL);
-    if (load_file("TEST.BIN", (uint64_t)p) == 0) {
-        printk("loaded file is:%s\r\n", p);
-    }
     init_timer();
     init_interrupt_controller();
     init_process();
-    enable_irq();
+    // enable_irq();
     while (1)
     {
         ;

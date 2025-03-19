@@ -70,6 +70,7 @@
 .global set_timer_interval
 .global enable_irq
 .global trap_return
+.global pstart
 
 .balign 0x800 
 vector_table:
@@ -135,6 +136,9 @@ lower_el_aarch32_fiq:
 .balign 0x80
 lower_el_aarch32_serror:
     b error
+
+pstart:
+    mov sp, x0
 
 trap_return:
     ldp x0, x1, [sp, #(16 * 17)]

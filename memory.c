@@ -4,6 +4,7 @@
 #include "stddef.h"
 #include "lib.h"
 #include "stdbool.h"
+#include "file.h"
 
 static struct Page free_memory;
 extern char end;
@@ -127,6 +128,7 @@ bool map_page(uint64_t map, uint64_t v, uint64_t pa, uint64_t attr)
     return true;
 }
 
+// free a page that allocate for the virtual address
 void free_page(uint64_t map, uint64_t vstart)
 {
     unsigned int index;
@@ -151,6 +153,7 @@ static void free_pmd(uint64_t map)
     for (int i = 0; i < 512; i++) {
         if (pgd[i] & ENTRY_V) {
             pud = (uint64_t*)P2V(PDE_ADDR(pgd[i]));
+            
             for (int j = 0; j < 512; j++) {
                 if (pud[j] & ENTRY_V) {
                     kfree(P2V(PDE_ADDR(pud[j])));
@@ -164,6 +167,7 @@ static void free_pmd(uint64_t map)
 static void free_pud(uint64_t map) 
 {
     uint64_t *ptr = (uint64_t*)map;
+
     for (int i = 0; i < 512; i++) {
         if (ptr[i] & ENTRY_V) {
             kfree(P2V(PDE_ADDR(ptr[i])));
@@ -178,15 +182,34 @@ static void free_pgd(uint64_t map)
 }
 void free_vm(uint64_t map)
 {
-    // free_page(map, 0x400000);
-    // free_pmd(map);
-    // free_pud(map);
-    // free_pgd(map);
+    // free the maped page then free 3 level page table
+    // attention page tables all reside on physical page
+    free_page(map, 0x400000);
+    free_pmd(map);
+    free_pud(map);
+    free_pgd(map);
 }
 
-bool setup_uvm(void)
+bool setup_uvm(uint64_t map, char *file_name)
 {
     bool status = false;
+    void *page = kalloc();
+
+    if (page != NULL) {
+        memset(page, 0, PAGE_SIZE);
+        status = map_page(map, 0x400000, V2P(page), ENTRY_V | USER | NORMAL_MEMORY | ENTRY_ACCESSED);
+
+        if (status == true) {
+            if (load_file(file_name, (uint64_t)page) == -1) {
+                free_vm(map);
+                return false;
+            }
+        }
+        else {
+            kfree((uint64_t)page);
+            free_vm(map);
+        }
+    }
 
     return status;
 }

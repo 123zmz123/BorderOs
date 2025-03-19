@@ -39,13 +39,14 @@ struct Page {
 #define ENTRY_ACCESSED  (1 << 10)
 #define NORMAL_MEMORY   (1 << 2)
 #define DEVICE_MEMORY   (0 << 2)
+#define USER            (1 << 6)
 
 void* kalloc(void);
 void kfree(uint64_t v);
 void init_memory(void);
 bool map_page(uint64_t map, uint64_t v, uint64_t pa, uint64_t attribute);
 void switch_vm(uint64_t map);
-bool setup_uvm(void);
+bool setup_uvm(uint64_t map, char *file_name);
 void free_page(uint64_t map, uint64_t vstart);
 void free_vm(uint64_t map);
 uint64_t read_pgd(void);
