@@ -5,8 +5,13 @@
 
 static struct Process process_table[NUM_PROC];
 static uint8_t pid_num = 1u;
+static struct ProcessControl pc;
 void pstart(struct TrapFrame *tf);
 
+struct ProcessControl* get_ProcessControl(void) 
+{
+    return &pc;
+}
 static struct Process* find_unuse_proc(void)
 {
     struct Process *process = NULL;
@@ -23,18 +28,24 @@ static struct Process* find_unuse_proc(void)
 
 static void init_idle_proc(void) 
 {
-
     struct Process *process;
+    struct ProcessControl *process_control;
+
     process = find_unuse_proc();
     ASSERT(process == &process_table[0]);
 
     process->state = PROC_RUNNING;
     process->pid = 0;
     process->page_map = P2V(read_pgd());
+
+    process_control = get_ProcessControl();
+    process_control->current_process = process;
 }
+
 static struct Process* alloc_new_process(void)
 {
     struct Process *process;
+
     process = find_unuse_proc();
     ASSERT(process == &process_table[1]);
 
@@ -47,6 +58,8 @@ static struct Process* alloc_new_process(void)
     process->state = PROC_INIT;
     process->pid = pid_num++;
 
+    process->context = process->stack + PAGE_SIZE - sizeof(struct TrapFrame) - 12*8;
+    *(uint64_t*)(process->context + 11*8) = (uint64_t)trap_return;
     process->tf = (struct TrapFrame*)(process->stack + PAGE_SIZE - sizeof(struct TrapFrame));
     process->tf->elr = 0x400000;
     process->tf->sp0 = 0x400000 + PAGE_SIZE;
@@ -63,27 +76,77 @@ static struct Process* alloc_new_process(void)
 static void init_user_process(void)
 {
     struct Process *process;
+    struct ProcessControl *process_control;
+    struct HeadList *list;
 
     process = alloc_new_process();
     ASSERT(process != NULL);
 
     ASSERT(setup_uvm((uint64_t)process->page_map, "INIT.BIN"));
+
+    process_control = get_ProcessControl();
+    list = &process_control->ready_list;
+
+    process->state = PROC_READY;
+    append_list_tail(list, (struct List*)process);
 }
 
-void launch(void)
-{
-    // init process in table[1]
-    // load user pgd map to reg
-    switch_vm(process_table[1].page_map);
-    // load tf to sp reg
-    pstart(process_table[1].tf);
-}
 
 void init_process(void)
 {
     init_idle_proc();
     init_user_process();
+}
 
-    // 
-    launch();
+static void switch_process(struct Process *prev, struct Process *current) 
+{
+    switch_vm(current->page_map);
+    swap(&prev->context, current->context);
+}
+
+static void schedule(void) 
+{
+    struct Process *prev_proc;
+    struct Process *current_proc;
+    struct ProcessControl *process_control;
+    struct HeadList *list;
+
+    process_control = get_ProcessControl();
+    list = &process_control->ready_list;
+    prev_proc = process_control->current_process;
+
+    if (is_list_empty(list)) {
+        current_proc = &process_table[0];
+    }
+    else {
+        current_proc = (struct Process*)remove_list_head(list);
+    }
+
+    current_proc->state = PROC_RUNNING;
+    process_control->current_process = current_proc;
+
+    switch_process(prev_proc, current_proc);
+}
+
+void yield(void)
+{
+    struct Process *process;
+    struct ProcessControl *process_control;
+    struct HeadList *list;
+    
+    process_control = get_ProcessControl();
+    list = &process_control->ready_list;
+
+    if (is_list_empty(list)) {
+        return;
+    }
+
+    process = process_control->current_process;
+    process->state = PROC_READY;
+
+    if (process->pid != 0) {
+        append_list_tail(list, (struct List*)process);
+    }
+
+    schedule();
 }
