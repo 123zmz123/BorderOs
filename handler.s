@@ -1,6 +1,6 @@
 /*https://cs140e.sergio.bz/docs/ARMv8-A-Programmer-Guide.pdf 10.4*/
 .macro kernel_entry
-    // 36 * 8 bytes space
+    // 36 * 8 bytes(64 bits) space
     sub sp, sp, #(36 * 8)
     stp x0, x1, [sp]
     //store pair at sp+16
@@ -137,6 +137,8 @@ lower_el_aarch32_fiq:
 lower_el_aarch32_serror:
     b error
 
+// after pstart then excute trap_return
+// for exit kenenl mode and start user process
 pstart:
     mov sp, x0
 
@@ -150,8 +152,14 @@ trap_return:
 sync_handler:
     kernel_entry
     // handler id num
-    mov x0, #1   
+    mrs x0, esr_el1
+    lsr x1, x0, #26
+    cmp x1, #0b010101
+    mov x2, #1
+    mov x3, #3
+    csel x0, x2, x3, ne
     handler_entry
+
 irq_handler:
     kernel_entry
     // args id,reason,happened_addr

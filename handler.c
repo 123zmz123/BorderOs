@@ -4,6 +4,7 @@
 #include "irq.h"
 #include "uart.h"
 #include "handler.h"
+#include "syscall.h"
 /*defined in handler.s*/
 void enable_timer(void);
 uint32_t read_timer_status(void);
@@ -74,6 +75,11 @@ void handler(struct TrapFrame *tf)
                 while (1) { }
             }
         }
+        break;
+
+    // we calculate the syscall as 3
+    case 3:
+        system_call(tf);
         break;
 
     default:

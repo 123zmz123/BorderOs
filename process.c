@@ -55,7 +55,7 @@ static struct Process* alloc_new_process(void)
     // we still waste so much space oh my god!
     process->page_map = (uint64_t)kalloc();
     ASSERT(process->page_map != 0);
-    memset((void *)process->page_map, 0, PAGE_SIZE);
+    memset((void*)process->page_map, 0, PAGE_SIZE);
 
     return process;
 }
@@ -75,6 +75,7 @@ void launch(void)
     // init process in table[1]
     // load user pgd map to reg
     switch_vm(process_table[1].page_map);
+    // load tf to sp reg
     pstart(process_table[1].tf);
 }
 
@@ -83,5 +84,6 @@ void init_process(void)
     init_idle_proc();
     init_user_process();
 
+    // 
     launch();
 }

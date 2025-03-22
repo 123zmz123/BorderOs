@@ -69,7 +69,7 @@ static int decimal_to_string(char *buffer, int position, int64_t digits)
     return size;
 }
 
-static void write_console(const char *buffer, int size)
+void write_console(const char *buffer, int size)
 {
     for (int i = 0; i < size; i++)
     {

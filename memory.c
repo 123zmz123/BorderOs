@@ -190,6 +190,7 @@ void free_vm(uint64_t map)
     free_pgd(map);
 }
 
+// load program from file system and setup the virtual address mapping
 bool setup_uvm(uint64_t map, char *file_name)
 {
     bool status = false;
@@ -197,6 +198,7 @@ bool setup_uvm(uint64_t map, char *file_name)
 
     if (page != NULL) {
         memset(page, 0, PAGE_SIZE);
+        // we map virtual address 0x400000 to the new allocated page
         status = map_page(map, 0x400000, V2P(page), ENTRY_V | USER | NORMAL_MEMORY | ENTRY_ACCESSED);
 
         if (status == true) {
