@@ -202,7 +202,7 @@ enable_irq:
     // unmask irq , means enable it
     msr daifclr, #2
     ret
-
+// x19~x28 is the callee saved registers
 swap:
     sub	sp,  sp,  #(12 * 8)
 	stp	x19, x20, [sp, #(16 * 0)]
@@ -226,5 +226,5 @@ swap:
 	ldp	x27, x28, [sp, #(16 * 4)]
 	ldp	x29, x30, [sp, #(16 * 5)]
     add sp,  sp,  #(12 * 8)
-
     ret
+    // after ret pc=x30

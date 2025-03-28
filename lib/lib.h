@@ -4,6 +4,7 @@
 #include "stdint.h"
 
 int printf(const char *format, ...);
+int writeu(char *buffer, int buffer_size);
 void sleepu(uint64_t ticks);
 void exitu(void);
 void waitu(int pid);

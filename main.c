@@ -21,8 +21,4 @@ void KMain(void)
     init_interrupt_controller();
     init_process();
     enable_irq();
-    while (1)
-    {
-        ;
-    }
 }

@@ -101,9 +101,11 @@ void init_process(void)
 static void switch_process(struct Process *prev, struct Process *current) 
 {
     switch_vm(current->page_map);
+    // after swap we call trap_return
     swap(&prev->context, current->context);
 }
 
+// find a new process and execute
 static void schedule(void) 
 {
     struct Process *prev_proc;
@@ -125,6 +127,7 @@ static void schedule(void)
     current_proc->state = PROC_RUNNING;
     process_control->current_process = current_proc;
 
+    // execute other process but start from kernel mode
     switch_process(prev_proc, current_proc);
 }
 
@@ -133,7 +136,7 @@ void yield(void)
     struct Process *process;
     struct ProcessControl *process_control;
     struct HeadList *list;
-    
+
     process_control = get_ProcessControl();
     list = &process_control->ready_list;
 
@@ -149,4 +152,39 @@ void yield(void)
     }
 
     schedule();
+}
+
+void sleep(int wait)
+{
+    struct Process *process;
+    struct ProcessControl *process_control;
+
+    process_control = get_ProcessControl();
+    process = process_control->current_process;
+    process->state = PROC_SLEEP;
+    process->wait = wait;
+
+    append_list_tail(&process_control->wait_list, (struct List*)process);
+    schedule();
+}
+
+// if some process were wait we try add it to the ready list.then shed will restore it.
+void wake_up(int wait)
+{
+    struct Process *process;
+    struct ProcessControl *process_control;
+    struct HeadList *ready_list;
+    struct HeadList *wait_list;
+
+    process_control = get_ProcessControl();
+    ready_list = &process_control->ready_list;
+    wait_list = &process_control->wait_list;
+
+    process = (struct Process*)remove_list(wait_list, wait);
+
+    while (process != NULL) {
+        process->state = PROC_READY;
+        append_list_tail(ready_list, (struct List*)process);
+        process = (struct Process*)remove_list(wait_list, wait);
+    }
 }

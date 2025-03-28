@@ -61,5 +61,6 @@ struct TrapFrame {
 
 void init_timer(void);
 void enable_irq(void);
+uint64_t get_ticks(void);
 void init_interrupt_controller(void);
 #endif

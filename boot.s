@@ -64,4 +64,7 @@ el1_entry:
     ldr x0, =KMain
 // jump to the Kmain(which defined in c)
     blr x0
-    b end
+
+halt:
+    wfi 
+    b halt

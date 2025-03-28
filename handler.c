@@ -34,15 +34,13 @@ void init_timer(void)
    out_word(CNTP_EL0, (1 << 1));
 }
 
-static void timer_interrupt_handler(void){
+static void timer_interrupt_handler(void)
+{
     uint32_t status = read_timer_status();
     // timer irq is pending
     if (status & (1 << 2)) {
         ticks++;
-        if (ticks % 100 == 0) {
-            printk("timer %d \r\n", ticks);
-        }
-
+        wake_up(-1);
         set_timer_interval(timer_interval);
     }
 }
@@ -50,6 +48,11 @@ static void timer_interrupt_handler(void){
 static uint32_t get_irq_number(void)
 {
     return in_word(IRQ_BASIC_PENDING);
+}
+
+uint64_t get_ticks(void)
+{
+    return ticks;
 }
 // tf where the address of sp
 void handler(struct TrapFrame *tf) 

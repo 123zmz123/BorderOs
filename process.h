@@ -9,6 +9,7 @@ struct Process {
     struct List *next;
     int pid;
     int state;
+    int wait;
     uint64_t context;
     // map to each process page table
     uint64_t page_map;
@@ -21,6 +22,7 @@ struct Process {
 struct ProcessControl {
     struct Process *current_process;
     struct HeadList ready_list;
+    struct HeadList wait_list;
 };
 
 #define STACK_SIZE (2*1024*1024)
@@ -30,11 +32,14 @@ struct ProcessControl {
 #define PROC_INIT 1
 #define PROC_RUNNING 2
 #define PROC_READY 3
+#define PROC_SLEEP 4
 
 void init_process(void);
 struct ProcessControl* get_ProcessControl(void);
 void yield(void);
 void swap(uint64_t *prev, uint64_t next);
 void trap_return(void);
+void sleep(int wait);
+void wake_up(int wait);
 
 #endif
