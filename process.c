@@ -188,3 +188,44 @@ void wake_up(int wait)
         process = (struct Process*)remove_list(wait_list, wait);
     }
 }
+
+void exit(void)
+{
+    struct Process *process;
+    struct ProcessControl *process_control;
+
+    process_control = get_ProcessControl();
+    process = process_control->current_process;
+    process->state = PROC_KILLED;
+    process->wait = process->pid;
+    append_list_tail(&process_control->kill_list, (struct List*)process);
+    // wake up some process(wait=-3) to ready_list
+    wake_up(-3);
+    schedule();
+}
+
+void wait(int pid)
+{
+    struct Process *process;
+    struct ProcessControl *process_control;
+    struct HeadList *list;
+
+    process_control = get_ProcessControl();
+    list = &process_control->kill_list;
+
+    while (1) {
+        if (!is_list_empty(list)) {
+            process = (struct Process*)remove_list(list, pid);
+            if (process != NULL) {
+                ASSERT(process->state == PROC_KILLED);
+                kfree(process->stack);
+                free_vm(process->page_map);
+                memset(process, 0, sizeof(struct Process));
+                break;
+            }
+        }
+
+        // set it's own proces->wait=3 and then sleep
+        sleep(-3);
+    }
+}

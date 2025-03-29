@@ -40,6 +40,9 @@ static void timer_interrupt_handler(void)
     // timer irq is pending
     if (status & (1 << 2)) {
         ticks++;
+        // try to wake up the process in wait_list.
+        // and then call switch restore the process in kernel
+        // mode
         wake_up(-1);
         set_timer_interval(timer_interval);
     }
