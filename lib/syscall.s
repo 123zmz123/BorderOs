@@ -6,6 +6,7 @@
 .global open_file
 .global close_file
 .global get_file_size
+.global read_file
 
 writeu:
     // now we in
@@ -89,4 +90,20 @@ get_file_size:
     svc #1234
     // why we do not restore  x0?
     add sp, sp, #8
+    ret
+
+read_file:
+    sub sp, sp, #24
+    mov x8, #7
+
+    stp x0, x1, [sp]
+    str x2, [sp, #16]
+
+    mov x0, #3
+    // in kernel mode argptr=x1
+    mov x1, sp
+
+    svc #1234
+
+    add sp, sp, #24
     ret
