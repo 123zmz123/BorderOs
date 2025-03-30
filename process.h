@@ -15,6 +15,7 @@ struct Process {
     uint64_t page_map;
     // kernel_mode stack
     uint64_t stack;
+    struct FileDesc *file[100];
     // trapframe when enter kernel
     struct TrapFrame *tf;
 };

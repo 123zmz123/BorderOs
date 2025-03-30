@@ -3,7 +3,10 @@
 #include "print.h"
 #include "lib.h"
 #include "debug.h"
+#include "process.h"
 
+static struct FCB *fcb_table;
+static struct FileDesc *file_desc_table;
 
 static struct BPB* get_fs_bpb(void)
 {
@@ -206,6 +209,103 @@ int load_file(char *path, uint64_t addr)
 
     return ret;
 }
+static uint32_t get_fcb(uint32_t index)
+{
+    struct DirEntry *dir_table;
+
+    if (fcb_table[index].count == 0) {
+        dir_table = get_root_directory();
+        fcb_table[index].dir_index = index;
+        fcb_table[index].file_size = dir_table[index].file_size;
+        fcb_table[index].cluster_index = dir_table[index].cluster_index;
+        memcpy(&fcb_table[index].name, &dir_table[index].name, 8);
+        memcpy(&fcb_table[index].ext, &dir_table[index].ext, 3);
+    }
+
+    fcb_table[index].count++;
+
+    return index;
+}
+
+int open_file(struct Process *proc, char *path_name)
+{
+    int fd = -1;
+    int file_desc_index = -1;
+    uint32_t entry_index;
+    uint32_t fcb_index;
+
+    for (int i = 0; i < 100; i++) {
+        if (proc->file[i] == NULL) {
+            fd = i;
+            break;
+        }
+    }
+
+    if (fd == -1) {
+        return -1;
+    }
+
+    for (int i = 0; i < PAGE_SIZE / sizeof(struct FileDesc); i++) {
+        if (file_desc_table[i].fcb == NULL) {
+            file_desc_index = i;
+            break;
+        }
+    }
+
+    if (file_desc_index == -1) {
+        return -1;
+    }
+
+    entry_index = search_file(path_name);
+    if (entry_index == 0xffffffff) {
+        return -1;
+    }
+
+    fcb_index = get_fcb(entry_index);
+    memset(&file_desc_table[file_desc_index], 0, sizeof(struct FileDesc));
+    file_desc_table[file_desc_index].fcb = &fcb_table[fcb_index];
+    proc->file[fd] = &file_desc_table[file_desc_index];
+
+    return fd;
+}
+
+static void put_fcb(struct FCB *fcb)
+{
+    ASSERT(fcb->count > 0);
+    fcb->count--;
+}
+
+void close_file(struct Process *proc, int fd)
+{
+    put_fcb(proc->file[fd]->fcb);
+
+    proc->file[fd]->fcb = NULL;
+    proc->file[fd] = NULL;
+}
+
+static bool init_fcb(void)
+{
+    fcb_table = (struct FCB*)kalloc();
+    if (fcb_table == NULL) {
+        return false;
+    }
+
+    memset(fcb_table, 0, PAGE_SIZE);
+
+    return true;
+}
+
+static bool init_file_desc(void) 
+{
+    file_desc_table = (struct FileDesc*)kalloc();
+    if (file_desc_table == NULL) {
+        return false;
+    }
+
+    memset(file_desc_table, 0, PAGE_SIZE);
+
+    return true;
+}
 
 void init_fs(void)
 {
@@ -215,5 +315,8 @@ void init_fs(void)
         printk("invalid signature\n");
         ASSERT(0);
     }
+
+    ASSERT(init_fcb());
+    ASSERT(init_file_desc());
 }
 

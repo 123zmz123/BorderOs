@@ -5,6 +5,7 @@
 #include "stddef.h"
 #include "process.h"
 #include "handler.h"
+#include "file.h"
 static SYSTEMCALL system_calls[10];
 static int sys_write(int64_t *argptr)
 {
@@ -41,6 +42,20 @@ static int sys_wait(int64_t *argptr)
     return 0;
 }
 
+static int sys_open_file(int64_t *argptr)
+{
+    struct ProcessControl *pc = get_ProcessControl();
+    return open_file(pc->current_process, (char*)argptr[0]);
+}
+
+static int sys_close_file(int64_t *argptr)
+{
+    struct ProcessControl *pc = get_ProcessControl();
+    close_file(pc->current_process, argptr[0]);
+
+    return 0;
+}
+
 void system_call(struct TrapFrame *tf) 
 {   
     // x8->system_call_num
@@ -48,7 +63,7 @@ void system_call(struct TrapFrame *tf)
     int64_t param_count = tf->x0;
     int64_t *argptr = (int64_t*)tf->x1;
 
-    if (param_count < 0 || i < 0 || i > 3) {
+    if (param_count < 0 || i < 0 || i > 5) {
         // return -1 as error
         tf->x0 = -1;
         return;
@@ -63,4 +78,6 @@ void init_system_call(void)
     system_calls[1] = sys_sleep;
     system_calls[2] = sys_exit;
     system_calls[3] = sys_wait;
+    system_calls[4] = sys_open_file;
+    system_calls[5] = sys_close_file;
 }
