@@ -3,13 +3,15 @@
 int main(void)
 {
     int fd;
+    int size;
 
     fd = open_file("TEST.BIN");
     if (fd == -1) {
         printf("open file failed\r\n");
     }
     else {
-        printf("open file succeeds\r\n");
+        size = get_file_size(fd);
+        printf("The size of the file is %d \r\n", (int64_t)size);
     }
 
     close_file(fd);

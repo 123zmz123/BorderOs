@@ -5,6 +5,7 @@
 .global waitu
 .global open_file
 .global close_file
+.global get_file_size
 
 writeu:
     // now we in
@@ -75,5 +76,17 @@ close_file:
 
     svc #1234
 
+    add sp, sp, #8
+    ret
+get_file_size:
+    sub sp, sp, #8
+    mov x8, #6
+
+    str x0, [sp]
+    mov x0, #1
+    mov x1, sp
+
+    svc #1234
+    // why we do not restore  x0?
     add sp, sp, #8
     ret

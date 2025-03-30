@@ -227,6 +227,11 @@ static uint32_t get_fcb(uint32_t index)
     return index;
 }
 
+uint32_t get_file_size(struct Process *process, int fd)
+{
+    return process->file[fd]->fcb->file_size;
+}
+
 int open_file(struct Process *proc, char *path_name)
 {
     int fd = -1;

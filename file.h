@@ -57,10 +57,10 @@ struct FileDesc {
 #define FS_BASE P2V(0x30000000)
 #define ENTRY_EMPTY 0
 #define ENTRY_DELETED 0xe5
-
 struct Process;
 void init_fs(void);
 int load_file(char *path, uint64_t addr);
 int open_file(struct Process *proc, char *path_name);
 void close_file(struct Process *proc, int fd);
+uint32_t get_file_size(struct Process *process, int fd);
 #endif
