@@ -51,6 +51,7 @@ bool setup_uvm(struct Process *process, char *file_name);
 void free_page(uint64_t map, uint64_t vstart);
 void free_vm(uint64_t map);
 uint64_t read_pgd(void);
+bool copy_uvm(uint64_t dst_map, uint64_t src_map, int size);
 
 
 #endif

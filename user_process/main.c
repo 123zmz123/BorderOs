@@ -2,23 +2,16 @@
 
 int main(void)
 {
-    int fd;
-    int size;
-    char buffer[100];
+    int pid;
 
-    fd = open_file("TEST.BIN");
-    if (fd == -1) {
-        printf("open file failed\r\n");
+    pid = fork();
+    if (pid == 0) {
+        printf("This is the new process\r\n");
     }
     else {
-        size = get_file_size(fd);
-        size = read_file(fd, buffer, size);
-        buffer[size] = '\0';
-        printf("%s\r\n", buffer);
-        printf("Read %dbytes in total \r\n", (int64_t)size);
+        printf("This is the current process\r\n");
+        waitu(pid);
     }
-
-    close_file(fd);
     
     return 0;
 }

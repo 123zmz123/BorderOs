@@ -265,6 +265,7 @@ int open_file(struct Process *proc, char *path_name)
     fcb_index = get_fcb(entry_index);
     memset(&file_desc_table[file_desc_index], 0, sizeof(struct FileDesc));
     file_desc_table[file_desc_index].fcb = &fcb_table[fcb_index];
+    file_desc_table[file_desc_index].count = 1;
     proc->file[fd] = &file_desc_table[file_desc_index];
 
     return fd;
@@ -279,8 +280,11 @@ static void put_fcb(struct FCB *fcb)
 void close_file(struct Process *proc, int fd)
 {
     put_fcb(proc->file[fd]->fcb);
+    proc->file[fd]->count--;
 
+    if (proc->file[fd]->count == 0) {
     proc->file[fd]->fcb = NULL;
+    }
     proc->file[fd] = NULL;
 }
 

@@ -227,6 +227,40 @@ bool setup_uvm(struct Process *process, char *file_name)
     return status;
 }
 
+bool copy_uvm(uint64_t dst_map, uint64_t src_map, int size)
+{
+    bool status = false;
+    unsigned int index;
+    uint64_t *pd = NULL;
+    uint64_t start;
+
+    void *page = kalloc();
+    
+    if (page != NULL) {
+        memset(page, 0, PAGE_SIZE);
+        status = map_page(dst_map, 0x400000, V2P(page), ENTRY_V | USER | NORMAL_MEMORY | ENTRY_ACCESSED);
+
+        if (status == true) {
+            pd = find_pud_entry(src_map, 0x400000, 0, 0);
+            if (pd == NULL) {
+                free_vm(dst_map);
+                return false;
+            }
+
+            index = (0x400000U >> 21) & 0x1FF;
+            ASSERT((pd[index] & ENTRY_V) == 1);
+            start = P2V(PTE_ADDR(pd[index]));
+            memcpy(page, (void*)start, size);
+        }
+        else {
+            kfree((uint64_t)page);
+            free_vm(dst_map);
+        }
+    }
+
+    return status;
+}
+
 void switch_vm(uint64_t map)
 {
     load_pgd(V2P(map));

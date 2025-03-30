@@ -7,6 +7,7 @@
 .global close_file
 .global get_file_size
 .global read_file
+.global fork
 
 writeu:
     // now we in
@@ -106,4 +107,11 @@ read_file:
     svc #1234
 
     add sp, sp, #24
+    ret
+fork:
+    mov x8, #8
+    mov x0, #0
+
+    svc #1234
+
     ret
