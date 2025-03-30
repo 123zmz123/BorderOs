@@ -62,11 +62,19 @@ void handler(struct TrapFrame *tf)
 {
     uint32_t irq;
     int schedule = 0;
+    struct ProcessControl *process_control;
     switch (tf->trapno)
     {
     case 1:
+        if ((tf->spsr & 0xf) == 0) {
+            process_control = get_ProcessControl();
+            printk("sync error occurs in process %d\r\n", (int64_t)process_control->current_process->pid);
+            exit();
+        }
+        else {
         printk("sync error at:%x, reason:%x\r\n", tf->elr, tf->esr);
         while (1) { }
+        }
         break;
 
     case 2:
