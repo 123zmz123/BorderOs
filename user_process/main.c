@@ -6,10 +6,9 @@ int main(void)
 
     pid = fork();
     if (pid == 0) {
-        printf("This is the new process\r\n");
+        exec("TEST.BIN");
     }
     else {
-        printf("This is the current process\r\n");
         waitu(pid);
     }
     

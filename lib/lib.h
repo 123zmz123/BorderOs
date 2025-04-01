@@ -12,5 +12,6 @@ int get_file_size(int fd);
 int read_file(int fd, void *buffer, uint32_t size);
 int fork(void);
 void waitu(int pid);
+int exec(char *file_name);
 
 #endif

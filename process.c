@@ -282,3 +282,30 @@ int fork(void)
 
     return process->pid;
  }
+
+ int exec(struct Process *process, char *name)
+ {
+    int fd;
+    uint32_t size;
+
+    fd = open_file(process, name);
+    if (fd == -1) {
+        //kill and schedule
+        exit();
+    }
+    // uvm  already point to current process because current process call sys_exec 
+    memset((void*)0x400000, 0, PAGE_SIZE);
+    size = get_file_size(process, fd);
+    size = read_file(process, fd, (void*)0x400000, size);
+    if (size == 0xffffffff) {
+        exit();
+    }
+
+    close_file(process, fd);
+
+    memset(process->tf, 0, sizeof(struct TrapFrame));
+    process->tf->elr = 0x400000;
+    process->tf->sp0 = 0x400000 + PAGE_SIZE;
+    process->tf->spsr = 0;
+    return 0;
+ }
