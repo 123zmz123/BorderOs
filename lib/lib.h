@@ -13,5 +13,6 @@ int read_file(int fd, void *buffer, uint32_t size);
 int fork(void);
 void waitu(int pid);
 int exec(char *file_name);
+char keyboard_read(void);
 
 #endif
