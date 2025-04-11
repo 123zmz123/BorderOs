@@ -86,6 +86,11 @@ static int sys_keyboard_read(int64_t *argptr)
     return read_key_buffer();
 }
 
+static int sys_read_root_directory(int64_t *argptr)
+{
+    return read_root_directory((char*)argptr[0]);
+}
+
 void system_call(struct TrapFrame *tf) 
 {   
     // x8->system_call_num
@@ -93,7 +98,7 @@ void system_call(struct TrapFrame *tf)
     int64_t param_count = tf->x0;
     int64_t *argptr = (int64_t*)tf->x1;
 
-    if (param_count < 0 || i < 0 || i > 10) {
+    if (param_count < 0 || i < 0 || i > 11) {
         // return -1 as error
         tf->x0 = -1;
         return;
@@ -115,4 +120,5 @@ void init_system_call(void)
     system_calls[8] = sys_fork;
     system_calls[9] = sys_exec;
     system_calls[10] = sys_keyboard_read;
+    system_calls[11] = sys_read_root_directory;
 }

@@ -10,6 +10,7 @@
 .global fork
 .global exec
 .global keyboard_read
+.global read_root_directory
 
 writeu:
     // now we in
@@ -138,4 +139,17 @@ keyboard_read:
 
     svc #1234
 
+    ret
+
+read_root_directory:
+    sub sp, sp, #8
+    mov x8, #11
+
+    str x0, [sp]
+    mov x0, #1
+    mov x1, sp
+
+    svc #1234
+
+    add sp, sp, #8
     ret

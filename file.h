@@ -65,5 +65,6 @@ int open_file(struct Process *proc, char *path_name);
 void close_file(struct Process *proc, int fd);
 uint32_t get_file_size(struct Process *process, int fd);
 uint32_t read_file(struct Process *process, int fd, void *buffer, uint32_t size);
+int read_root_directory(char *buffer);
 
 #endif
