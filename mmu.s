@@ -48,12 +48,12 @@ enable_mmu:
     
     ret
 
-setup_vm:
+setup_vm: // now all the address is still the physical address
 setup_kvm:
     adr x0, pgd_ttbr1
     adr x1, pud_ttbr1
     orr x1, x1, #3
-    str x1, [x0]
+    str x1, [x0] // pgd_ttbr1[0]=pud_ttbr1
 
     adr x0, pud_ttbr1
     adr x1, pmd_ttbr1
