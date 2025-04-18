@@ -43,4 +43,8 @@ we compile 2 process. each process will plan to read some data from memory 0x1F 
 
 ![](./images/2process_map_2_individual_page.png)
 
+## Draw back of simple page table.
+A 1 level page table is easy to understand.
+In real world a typical address range is 32 bit. and page size is 4k(2^12=4K) which means we can index 2^20 pages(20=32-12). if we manage process's page table(we need memory to store them right?),we need consume huge memory in our kernel
 
+![](./images/1level_pagetable.png)
